@@ -51,6 +51,7 @@ export default {
       height: 15,
       width: 60,
       cellsArr: [],
+      lastCell: null,
       windowWidth: window.innerWidth,
       windowHeight: window.innerHeight,
       cellSize: 32,
@@ -63,7 +64,7 @@ export default {
   mounted() {
     let table = document.getElementById("tableGrid");
     table.addEventListener("mousedown", this.mouseDownHandler);
-    table.addEventListener("mouseup", this.mouseUpHandler);
+    window.addEventListener("mouseup", this.mouseUpHandler);
     table.addEventListener("mousemove", this.cellClick);
   },
   computed: {
@@ -96,20 +97,25 @@ export default {
     cellClick(e) {
       if (this.mouseDown) {
         let elem = e.target;
+        if(this.lastCell !== elem)
+        {
         let y = elem.attributes[0].value;
         let x = elem.attributes[1].value;
         elem.classList.toggle("wall");
         this.cellsArr[y][x].isWall = !this.cellsArr[y][x].isWall;
+        this.lastCell = elem;
+        }
       }
     },
     mouseDownHandler(e) {
       if (e.buttons === 1) {
-        this.mouseDown = !this.mouseDown;
+        this.mouseDown = true;
       }
     },
     mouseUpHandler(e){
+      console.log(e);
       if(e.button === 0){
-        this.mouseDown = !this.mouseDown;
+        this.mouseDown = false;
       }
     }
   },
