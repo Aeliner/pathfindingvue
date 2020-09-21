@@ -27,7 +27,7 @@
         id="myRange"
       />
     </div>
-    <table id="tableGrid" @mousemove="cellClick" cellspacing="0">
+    <table id="tableGrid" cellspacing="0">
       <tr v-for="(row, i) in cellsArr" :key="i">
         <td
           v-for="(column, j) in row"
@@ -64,6 +64,7 @@ export default {
     let table = document.getElementById("tableGrid");
     table.addEventListener("mousedown", this.mouseDownHandler);
     table.addEventListener("mouseup", this.mouseUpHandler);
+    table.addEventListener("mousemove", this.cellClick);
   },
   computed: {
     computedSize: function() {
