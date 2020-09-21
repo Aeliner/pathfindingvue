@@ -27,7 +27,7 @@
         id="myRange"
       />
     </div>
-    <table @mousemove="cellClick" cellspacing="0">
+    <table id="tableGrid" @mousemove="cellClick" cellspacing="0">
       <tr v-for="(row, i) in cellsArr" :key="i">
         <td
           v-for="(column, j) in row"
@@ -61,8 +61,9 @@ export default {
     this.createTable();
   },
   mounted() {
-    window.addEventListener("mousedown", this.mouseDownHandler);
-    window.addEventListener("mouseup", this.mouseDownHandler);
+    let table = document.getElementById("tableGrid");
+    table.addEventListener("mousedown", this.mouseDownHandler);
+    table.addEventListener("mouseup", this.mouseUpHandler);
   },
   computed: {
     computedSize: function() {
@@ -82,7 +83,14 @@ export default {
       this.calculateCellSize();
     },
     calculateCellSize() {
-      this.cellSize = this.windowWidth / this.width + "px";
+      let finalSize;
+      let widthSize = this.windowWidth / this.width;
+      if((this.height * widthSize) > (this.windowHeight / 1.5)){
+        finalSize = (this.windowHeight/1.5) / this.height;
+      }
+      else
+      finalSize = widthSize;
+      this.cellSize = finalSize + "px";
     },
     cellClick(e) {
       if (this.mouseDown) {
@@ -94,12 +102,15 @@ export default {
       }
     },
     mouseDownHandler(e) {
-      console.log(e);
       if (e.buttons === 1) {
         this.mouseDown = !this.mouseDown;
-        console.log("xD");
       }
     },
+    mouseUpHandler(e){
+      if(e.button === 0){
+        this.mouseDown = !this.mouseDown;
+      }
+    }
   },
   components: {
     // HelloWorld
@@ -115,6 +126,14 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+  display:flex;
+  align-content:center;
+  flex-direction: column;
+}
+
+table{
+  margin:0 auto;
+  user-select: none;
 }
 
 table td {
