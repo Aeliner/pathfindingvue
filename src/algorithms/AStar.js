@@ -8,7 +8,6 @@ AStarFind(grid, start, end)
 
     while(openList.length > 0)
     {
-        console.log("xD");
         let lowInd = 0;
         for(let i = 0; i < openList.length; i++)
         {
@@ -67,8 +66,6 @@ AStarFind(grid, start, end)
 findNeighbors(grid, node)
 {
     let returnArray = [], x = node.pos.x, y = node.pos.y;
-    console.log("grid aca");
-    console.log(grid);
     if(grid[x-1] && grid[x-1][y])
     {
         returnArray.push(grid[x-1][y]);
