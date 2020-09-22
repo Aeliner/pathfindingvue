@@ -29,12 +29,7 @@ AStarFind(grid, start, end)
         let index = openList.findIndex(item => item.pos == currentNode.pos);
         openList.splice(index, 1);
         closedList.push(currentNode);
-        console.log("currrent y neighbors");
-        console.log(currentNode);
         let neighborsArr = this.findNeighbors(grid, currentNode);
-        
-        
-        console.log(neighborsArr);
         for(let i = 0; i < neighborsArr.length; i++)
         {
             let neighbor = neighborsArr[i];
@@ -66,24 +61,24 @@ AStarFind(grid, start, end)
 findNeighbors(grid, node)
 {
     let returnArray = [], x = node.pos.x, y = node.pos.y;
-    if(grid[x-1] && grid[x-1][y])
+    if(grid[y-1] && grid[y-1][x])
     {
-        returnArray.push(grid[x-1][y]);
+        returnArray.push(grid[y-1][x]);
     }
 
-    if(grid[x+1] && grid[x+1][y])
+    if(grid[y+1] && grid[y+1][x])
     {
-        returnArray.push(grid[x+1][y]);
+        returnArray.push(grid[y+1][x]);
     }
 
-    if(grid[x][y-1] && grid[x][y-1])
+    if(grid[y][x-1])
     {
-        returnArray.push(grid[x][y-1]);
+        returnArray.push(grid[y][x-1]);
     }
 
-    if(grid[x][y+1] && grid[x][y+1])
+    if(grid[y][x+1])
     {
-        returnArray.push(grid[x][y+1]);
+        returnArray.push(grid[y][x+1]);
     }
     return returnArray;
 },

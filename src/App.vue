@@ -33,6 +33,7 @@
         <td
           v-for="(column, j) in row"
           :key="j"
+          v-bind:id="j.toString() +' '+ i.toString()"
           v-bind:style="{ width: computedSize, height: computedSize }"
           v-bind:row="i"
           v-bind:column="j"
@@ -101,8 +102,8 @@ export default {
         let elem = e.target;
         if(this.lastCell !== elem)
         {
-        let y = elem.attributes[0].value;
-        let x = elem.attributes[1].value;
+        let y = elem.attributes[1].value;
+        let x = elem.attributes[2].value;
         elem.classList.toggle("wall");
         this.cellsArr[y][x].isWall = !this.cellsArr[y][x].isWall;
         this.lastCell = elem;
@@ -121,7 +122,15 @@ export default {
       }
     },
     AStar(){
-      console.log(AStar.AStarFind(this.cellsArr, this.cellsArr[0][0], this.cellsArr[this.height-1][this.width-1]));
+      let pathArr = AStar.AStarFind(this.cellsArr, this.cellsArr[0][0], this.cellsArr[this.height-1][this.width-1]);
+      for (let i = 0; i < pathArr.length; i++)
+      {
+        let node = pathArr[i];
+        let string = node.pos.x+" "+node.pos.y;
+        let element = document.getElementById(string);
+        element.style.backgroundColor="red";
+      }
+      
     }
   },
   components: {
