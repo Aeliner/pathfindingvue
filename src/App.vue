@@ -27,6 +27,7 @@
         id="myRange"
       />
     </div>
+    <button v-on:click="AStar">Intentar xD</button>
     <table id="tableGrid" cellspacing="0">
       <tr v-for="(row, i) in cellsArr" :key="i">
         <td
@@ -43,6 +44,7 @@
 
 <script>
 //import HelloWorld from './components/HelloWorld.vue'
+import AStar from './algorithms/AStar'
 
 export default {
   name: "App",
@@ -78,7 +80,7 @@ export default {
       for (let i = 0; i < this.height; i++) {
         let rowsArr = [];
         for (let j = 0; j < this.width; j++) {
-          rowsArr.push({ x: j, y: i, isWall: false, isVisited: false });
+          rowsArr.push({ pos:{x: j, y: i}, f: 0, g: 0, h: 0, parent: null, isWall: false, isVisited: false });
         }
         this.cellsArr.push(rowsArr);
       }
@@ -117,6 +119,9 @@ export default {
       if(e.button === 0){
         this.mouseDown = false;
       }
+    },
+    AStar(){
+      console.log(AStar.AStarFind(this.cellsArr, this.cellsArr[0][0], this.cellsArr[this.height-1][this.width-1]));
     }
   },
   components: {
@@ -124,6 +129,8 @@ export default {
   },
 };
 </script>
+
+
 
 <style>
 #app {
