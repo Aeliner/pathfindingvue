@@ -16,6 +16,7 @@ AStarFind(grid, start, end)
         }
 
         let currentNode = openList[lowInd];
+        currentNode.isVisited = true;
         if(currentNode.pos == end.pos )
         {
             let current = currentNode, returnArr = [];
@@ -24,7 +25,7 @@ AStarFind(grid, start, end)
                 returnArr.push(current);
                 current = current.parent;
             }
-            return returnArr.reverse();
+            return {path: returnArr.reverse(), closed: closedList, opened: openList};
         }
         let index = openList.findIndex(item => item.pos == currentNode.pos);
         openList.splice(index, 1);
@@ -55,7 +56,7 @@ AStarFind(grid, start, end)
             }
         }
     }
-    return [];
+    return {path:[], closed:closedList};
 },
 
 findNeighbors(grid, node)
