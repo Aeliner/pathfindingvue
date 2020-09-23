@@ -3,7 +3,9 @@
     <!--   <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
     -->
+     <div class="actionsbar">
     <div class="slidecontainer">
+      <label for="myRangeHeight">{{this.height}}</label>
       <input
         @change="createTable"
         type="range"
@@ -12,10 +14,11 @@
         max="30"
         value="50"
         class="slider"
-        id="myRange"
+        id="myRangeHeight"
       />
     </div>
     <div class="slidecontainer">
+      <label for="myRangeWidth">{{this.width}}</label>
       <input
         @change="createTable"
         type="range"
@@ -24,11 +27,12 @@
         max="60"
         value="50"
         class="slider"
-        id="myRange"
+        id="myRangeWidth"
       />
     </div>
-    <button v-on:click="generate">Intentar xD</button>
-    <button v-on:click="AStar">Intentar xD</button>
+    <button v-on:click="generate">Create Maze</button>
+    <button v-on:click="AStar">Visualize Algorithm</button>
+    </div>
     <table id="tableGrid" cellspacing="0">
       <tr v-for="(row, i) in cellsArr" :key="i">
         <td
@@ -308,7 +312,7 @@ table td:hover {
 
 .slider {
   -webkit-appearance: none;
-  width: 100%;
+  width: 50%;
   height: 25px;
   background: #d3d3d3;
   outline: none;
@@ -319,6 +323,11 @@ table td:hover {
 
 .slider:hover {
   opacity: 1;
+}
+
+.actionsbar{
+  display:flex;
+  width:100%;
 }
 
 .slider::-webkit-slider-thumb {
