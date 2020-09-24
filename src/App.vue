@@ -3,35 +3,47 @@
     <!--   <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
     -->
-     <div class="actionsbar">
-    <div class="slidecontainer">
-      <label for="myRangeHeight">{{this.height}}</label>
-      <input
-        @change="createTable"
-        type="range"
-        v-model="height"
-        min="1"
-        max="30"
-        value="50"
-        class="slider"
-        id="myRangeHeight"
-      />
-    </div>
-    <div class="slidecontainer">
-      <label for="myRangeWidth">{{this.width}}</label>
-      <input
-        @change="createTable"
-        type="range"
-        v-model="width"
-        min="1"
-        max="60"
-        value="50"
-        class="slider"
-        id="myRangeWidth"
-      />
-    </div>
-    <button v-on:click="generate">Create Maze</button>
-    <button v-on:click="AStar">Visualize Algorithm</button>
+    <div class="actionsbar">
+      <div class="sliders">
+        <div class="slidecontainer">
+          <label for="myRangeHeight">{{ this.height }}</label>
+          <input
+            @change="createTable"
+            type="range"
+            v-model="height"
+            min="1"
+            max="30"
+            value="50"
+            class="slider"
+            id="myRangeHeight"
+          />
+        </div>
+        <div class="slidecontainer">
+          <label for="myRangeWidth">{{ this.width }}</label>
+          <input
+            @change="createTable"
+            type="range"
+            v-model="width"
+            min="1"
+            max="60"
+            value="50"
+            class="slider"
+            id="myRangeWidth"
+          />
+        </div>
+      </div>
+      <div class="draggableCells">
+        <div class="start">
+          <span id="start"></span>
+        </div>
+        <div class="end">
+          <span id="end"></span>
+        </div>
+      </div>
+      <div class="actionButtons">
+        <button v-on:click="generate">Create Maze</button>
+        <button v-on:click="AStar">Visualize Algorithm</button>
+      </div>
     </div>
     <table id="tableGrid" cellspacing="0">
       <tr v-for="(row, i) in cellsArr" :key="i">
@@ -63,7 +75,12 @@ export default {
       windowWidth: window.innerWidth,
       windowHeight: window.innerHeight,
       cellSize: 32,
+      dropCell: null,
+      selectedCell: null,
+      isDraggingCell: false,
       mouseDown: false,
+      startCell: null,
+      endCell: null,
       arrayMaze: [],
     };
   },
@@ -73,8 +90,11 @@ export default {
   mounted() {
     let table = document.getElementById("tableGrid");
     table.addEventListener("mousedown", this.mouseDownHandler);
+    table.addEventListener("click", this.cellClick);
     window.addEventListener("mouseup", this.mouseUpHandler);
     table.addEventListener("mousemove", this.cellClick);
+    this.dragElement(document.getElementById("start"));
+    this.dragElement(document.getElementById("end"));
     // this.generate();
   },
   computed: {
@@ -111,7 +131,7 @@ export default {
       this.cellSize = finalSize + "px";
     },
     cellClick(e) {
-      if (this.mouseDown) {
+      if ((this.mouseDown && !this.isDraggingCell) || (e.type == "click" && e.target.localName == "td")) {
         let elem = e.target;
         if (this.lastCell !== elem) {
           let y = elem.attributes[1].value;
@@ -120,6 +140,9 @@ export default {
           this.cellsArr[y][x].isWall = !this.cellsArr[y][x].isWall;
           this.lastCell = elem;
         }
+      } else if (this.isDraggingCell) {
+        let elem = e.target;
+        this.dropCell = elem;
       }
     },
     mouseDownHandler(e) {
@@ -128,7 +151,6 @@ export default {
       }
     },
     mouseUpHandler(e) {
-      console.log(e);
       if (e.button === 0) {
         this.mouseDown = false;
       }
@@ -136,30 +158,49 @@ export default {
     AStar() {
       let pathArr = AStar.AStarFind(
         this.cellsArr,
-        this.cellsArr[3][5],
-        this.cellsArr[this.height - 1][this.width - 1]
+        this.startCell,
+        this.endCell,
       );
 
-      for (let i = 0; i < pathArr.closed.length; i++) {
+      for (let i = 1; i < pathArr.closed.length; i++) {
         (function() {
           setTimeout(function() {
             let node = pathArr.closed[i];
             let string = node.pos.x + " " + node.pos.y;
-            console.log(string);
             let element = document.getElementById(string);
-            element.classList.toggle("visited");
+            element.classList.add("visited");
+            if(i == pathArr.closed.length-1)
+            element.addEventListener("animationend", paintPath);
           }, i * 15);
         })(i);
       }
+
+      function paintPath(e){
+        e.target.removeEventListener("animationend", paintPath);
+        for(let i = 0; i < pathArr.path.length-1; i++)
+      {
+        (function() {
+          setTimeout(function() {
+            let node = pathArr.path[i];
+            let string = node.pos.x + " " + node.pos.y;
+            let element = document.getElementById(string);
+            console.log(element);
+            element.classList.remove("visited");
+            element.classList.add("path");
+          }, i * 30);
+        })(i);
+      }
+      }
+      
     },
 
     generate() {
       this.addOuterWalls();
       this.addInnerWalls(
         this.getDirection(),
-        1,
+        0,
         this.width - 2,
-        1,
+        0,
         this.height - 2
       );
       this.show();
@@ -177,8 +218,8 @@ export default {
               element.classList.add("wall");
             } else {
               element.classList.remove("wall");
-            } 
-          }, i * 8);
+            }
+          }, i * 10);
         })(i);
       }
     },
@@ -233,7 +274,6 @@ export default {
       }
     },
     addHWall(minX, maxX, y) {
-
       let hole = Math.floor(this.randomNumber(minX, maxX) / 2) * 2 + 1;
       for (let i = minX; i <= maxX; i++) {
         if (i == hole) {
@@ -261,7 +301,78 @@ export default {
     randomNumber(min, max) {
       return Math.floor(Math.random() * (max - min + 1) + min);
     },
+
+    dragElement(elmnt) {
+      let y = this;
+      var pos1 = 0,
+        pos2 = 0,
+        pos3 = 0,
+        pos4 = 0;
+      if (document.getElementById(elmnt.id)) {
+        // if present, the header is where you move the DIV from:
+        document.getElementById(elmnt.id).onmousedown = dragMouseDown;
+      } else {
+        // otherwise, move the DIV from anywhere inside the DIV:
+        elmnt.onmousedown = dragMouseDown;
+      }
+
+      function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        y.isDraggingCell = true;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        y.selectedCell = e.target.id;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+      }
+
+      function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+        elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
+      }
+
+      function closeDragElement() {
+        // stop moving when mouse button is released:
+        y.isDraggingCell = false;
+        y.paintStartEndCell(y.selectedCell);
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+    },
+    paintStartEndCell(id) {
+      if (this.dropCell) {
+        let pointsArr = document.getElementsByClassName(id+"Cell");
+        if(pointsArr.length > 0)
+        {
+          for(let i = 0; i < pointsArr.length; i++)
+          {
+            let elem = pointsArr[i];
+            elem.classList.remove(id+"Cell");
+          }
+        }
+        this.dropCell.classList.add(id+"Cell");
+        document.getElementById(id).removeAttribute("style");
+        let y = this.dropCell.attributes[1].value;
+        let x = this.dropCell.attributes[2].value;
+        if (id == "start") this.startCell = this.cellsArr[y][x];
+        else this.endCell = this.cellsArr[y][x];
+      } else {
+        document.getElementById(id).removeAttribute("style");
+      }
+    },
   },
+
   components: {
     // HelloWorld
   },
@@ -279,6 +390,12 @@ export default {
   display: flex;
   align-content: center;
   flex-direction: column;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
 table {
@@ -301,9 +418,31 @@ table td::before {
   height: 100%;
   width: 100%;
 }
+
+.sliders {
+  width: 30%;
+  display: flex;
+}
+
+.slidecontainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.buttons {
+  display: flex;
+}
 table td:hover {
   cursor: pointer;
   background: #d0d0d0;
+}
+
+.startCell {
+  background-color: green;
+}
+
+.endCell {
+  background-color: red;
 }
 
 .slidecontainer {
@@ -312,7 +451,6 @@ table td:hover {
 
 .slider {
   -webkit-appearance: none;
-  width: 50%;
   height: 25px;
   background: #d3d3d3;
   outline: none;
@@ -325,9 +463,73 @@ table td:hover {
   opacity: 1;
 }
 
-.actionsbar{
-  display:flex;
+.actionsbar {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.draggableCells {
+  display: flex;
+}
+
+.draggableCells > div {
+  width: 32px;
+  height: 32px;
+  margin-left: 5px;
+  border: 1px solid black;
+  position: relative;
+}
+
+.draggableCells > div span {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.draggableCells > div #start {
+  background-color: green;
+}
+
+.draggableCells > div #end {
+  background-color: red;
+}
+
+.draggableCells > div:hover {
+  cursor: pointer;
+}
+
+.draggableCells .start:hover {
+  background-color: lightgreen;
+}
+
+.draggableCells .end:hover {
+  background-color: lightcoral;
+}
+
+.draggableCells .start {
+  background-color: green;
+}
+
+.draggableCells .end {
+  background-color: red;
+}
+
+.path{
+  position:relative;
+}
+
+.path::before{
+  position:absolute;
+  top:0;
+  left:0;
+  height:100%;
   width:100%;
+  background-color: #ff7ac3;
+  animation-name: paint-path;
+  animation-duration:1.5s;
 }
 
 .slider::-webkit-slider-thumb {
@@ -350,6 +552,10 @@ table td:hover {
   background-color: #2c3e50;
   animation-name: paint-wall;
   animation-duration: 0.5s;
+}
+
+.wall:hover::before{
+  background-color:#4e6f90;
 }
 
 .visited::before {
@@ -402,6 +608,29 @@ table td:hover {
   }
   100% {
     background-color: #d1fe84;
+    transform: scale(1);
+  }
+
+
+}
+
+@keyframes paint-path {
+  0% {
+    background-color:  #ff7ac3;
+  }
+  25% {
+    transform: scale(0.5);
+  }
+  50% {
+    transform: scale(0.75);
+  }
+  75% {
+    transform: scale(1);
+  }
+  90% {
+    transform: scale(1.25);
+  }
+  100% {
     transform: scale(1);
   }
 }
