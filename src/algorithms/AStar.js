@@ -25,6 +25,8 @@ AStarFind(grid, start, end)
                 returnArr.push(current);
                 current = current.parent;
             }
+            returnArr.push(start);
+            closedList.push(end);
             return {path: returnArr.reverse(), closed: closedList, opened: openList};
         }
         let index = openList.findIndex(item => item.pos == currentNode.pos);
