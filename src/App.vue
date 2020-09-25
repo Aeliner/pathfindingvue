@@ -40,9 +40,9 @@
           <span id="end"></span>
         </div>
       </div>
-      <div class="actionButtons">
-        <button v-on:click="generate">Create Maze</button>
-        <button v-on:click="AStar">Visualize Algorithm</button>
+      <div class="actionButtons" >
+        <button :disabled="animating == true" v-on:click="generate">Create Maze</button>
+        <button :disabled="animating == true" v-on:click="AStar">Visualize Algorithm</button>
       </div>
     </div>
     <table id="tableGrid" cellspacing="0">
@@ -81,6 +81,7 @@ export default {
       mouseDown: false,
       startCell: null,
       endCell: null,
+      animating: false,
       arrayMaze: [],
     };
   },
@@ -156,13 +157,14 @@ export default {
       }
     },
     AStar() {
+      this.animating = true;
       let pathArr = AStar.AStarFind(
         this.cellsArr,
         this.startCell,
         this.endCell,
       );
 
-      for (let i = 1; i < pathArr.closed.length; i++) {
+      for (let i = 0; i < pathArr.closed.length; i++) {
         (function() {
           setTimeout(function() {
             let node = pathArr.closed[i];
@@ -177,16 +179,17 @@ export default {
 
       function paintPath(e){
         e.target.removeEventListener("animationend", paintPath);
-        for(let i = 0; i < pathArr.path.length-1; i++)
+        for(let i = 0; i < pathArr.path.length; i++)
       {
         (function() {
           setTimeout(function() {
             let node = pathArr.path[i];
             let string = node.pos.x + " " + node.pos.y;
             let element = document.getElementById(string);
-            console.log(element);
             element.classList.remove("visited");
             element.classList.add("path");
+            if(i == pathArr.path.length-1)
+            this.animating=false;
           }, i * 30);
         })(i);
       }
@@ -195,6 +198,21 @@ export default {
     },
 
     generate() {
+      this.animating = true;
+      let tdArr = document.getElementsByTagName("td");
+      tdArr.forEach(td => {
+        td.classList.remove("startCell","endCell","wall","visited","path");
+      })
+      this.cellsArr.forEach(column => {
+        column.forEach(row => {
+          row.isWall = false;
+        });
+      });
+      this.startCell = null;
+      this.endCell = null;
+      this.arrayMaze = [];
+      this.dropCell = null;
+
       this.addOuterWalls();
       this.addInnerWalls(
         this.getDirection(),
@@ -204,10 +222,12 @@ export default {
         this.height - 2
       );
       this.show();
+      
     },
 
     show() {
       let maze = this.arrayMaze;
+      
       for (let i = 0; i < maze.length; i++) {
         (function() {
           setTimeout(function() {
@@ -219,6 +239,8 @@ export default {
             } else {
               element.classList.remove("wall");
             }
+            if(i == maze.length-1)
+            this.animating = false;
           }, i * 10);
         })(i);
       }
@@ -434,15 +456,19 @@ table td::before {
 }
 table td:hover {
   cursor: pointer;
-  background: #d0d0d0;
+  background-color: #d0d0d0;
 }
 
-.startCell {
-  background-color: green;
+.startCell, .startCell::before{
+  background-image: url("../images/placeholder.svg");
+  background-size:contain;
+  background-repeat:no-repeat;
 }
 
-.endCell {
-  background-color: red;
+.endCell, .endCell::before {
+  background-image: url("../images/arrival.svg");
+  background-size:contain;
+  background-repeat:no-repeat;
 }
 
 .slidecontainer {
@@ -490,11 +516,15 @@ table td:hover {
 }
 
 .draggableCells > div #start {
-  background-color: green;
+  background-image: url("../images/placeholder.svg");
+  background-size:contain;
+  background-repeat:no-repeat;
 }
 
 .draggableCells > div #end {
-  background-color: red;
+  background-image: url("../images/arrival.svg");
+  background-size:contain;
+  background-repeat:no-repeat;
 }
 
 .draggableCells > div:hover {
@@ -502,7 +532,7 @@ table td:hover {
 }
 
 .draggableCells .start:hover {
-  background-color: lightgreen;
+  background-color: lightgreen;   
 }
 
 .draggableCells .end:hover {
@@ -510,11 +540,15 @@ table td:hover {
 }
 
 .draggableCells .start {
-  background-color: green;
+  background-image: url("../images/placeholder.svg");
+  background-size:contain;
+  background-repeat:no-repeat;
 }
 
 .draggableCells .end {
-  background-color: red;
+  background-image: url("../images/arrival.svg");
+  background-size:contain;
+  background-repeat:no-repeat;
 }
 
 .path{
