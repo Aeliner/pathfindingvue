@@ -3,46 +3,54 @@
     <!--   <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
     -->
-    <div class="actionsbar">
+    <div v-bind:class="[animating ? 'disabled' : '']" class="actionsbar">
       <div class="sliders">
-        <div class="slidecontainer">
-          <label for="myRangeHeight">{{ this.height }}</label>
+        <div class="range-slider">
           <input
             @change="createTable"
-            type="range"
             v-model="height"
+            class="range-slider__range"
+            type="range"
             min="1"
             max="30"
             value="50"
-            class="slider"
-            id="myRangeHeight"
           />
+          <span class="range-slider__value">Height: {{ this.height }}</span>
         </div>
-        <div class="slidecontainer">
-          <label for="myRangeWidth">{{ this.width }}</label>
+        <div class="range-slider">
           <input
+            class="range-slider__range"
             @change="createTable"
             type="range"
             v-model="width"
             min="1"
             max="60"
             value="50"
-            class="slider"
-            id="myRangeWidth"
           />
+          <span class="range-slider__value">Width: {{ this.width }}</span>
         </div>
       </div>
       <div class="draggableCells">
-        <div class="start">
-          <span id="start"></span>
-        </div>
-        <div class="end">
-          <span id="end"></span>
+        <span>Drag and Drop into the grid</span>
+        <div class="content">
+          <div class="dragcell">
+            <p>Start</p>
+            <div class="start">
+              <span id="start"></span>
+            </div>
+          </div>
+
+          <div class="dragcell">
+            <p>End</p>
+            <div class="end">
+              <span id="end"></span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="actionButtons" >
-        <button :disabled="animating == true" v-on:click="generate">Create Maze</button>
-        <button :disabled="animating == true" v-on:click="AStar">Visualize Algorithm</button>
+      <div class="actionButtons">
+        <button v-on:click="generate">Create Maze</button>
+        <button v-on:click="AStar">Visualize Algorithm</button>
       </div>
     </div>
     <table id="tableGrid" cellspacing="0">
@@ -132,7 +140,10 @@ export default {
       this.cellSize = finalSize + "px";
     },
     cellClick(e) {
-      if ((this.mouseDown && !this.isDraggingCell) || (e.type == "click" && e.target.localName == "td")) {
+      if (
+        (this.mouseDown && !this.isDraggingCell) ||
+        (e.type == "click" && e.target.localName == "td")
+      ) {
         let elem = e.target;
         if (this.lastCell !== elem) {
           let y = elem.attributes[1].value;
@@ -157,11 +168,12 @@ export default {
       }
     },
     AStar() {
-      this.animating = true;
+      let vm = this;
+      vm.animating = true;
       let pathArr = AStar.AStarFind(
         this.cellsArr,
         this.startCell,
-        this.endCell,
+        this.endCell
       );
 
       for (let i = 0; i < pathArr.closed.length; i++) {
@@ -171,40 +183,41 @@ export default {
             let string = node.pos.x + " " + node.pos.y;
             let element = document.getElementById(string);
             element.classList.add("visited");
-            if(i == pathArr.closed.length-1)
-            element.addEventListener("animationend", paintPath);
+            if (i == pathArr.closed.length - 1)
+              element.addEventListener("animationend", paintPath);
           }, i * 15);
         })(i);
       }
 
-      function paintPath(e){
+      function paintPath(e) {
         e.target.removeEventListener("animationend", paintPath);
-        for(let i = 0; i < pathArr.path.length; i++)
-      {
-        (function() {
-          setTimeout(function() {
-            let node = pathArr.path[i];
-            let string = node.pos.x + " " + node.pos.y;
-            let element = document.getElementById(string);
-            element.classList.remove("visited");
-            element.classList.add("path");
-            if(i == pathArr.path.length-1)
-            this.animating=false;
-          }, i * 30);
-        })(i);
+        for (let i = 0; i < pathArr.path.length; i++) {
+          (function() {
+            setTimeout(function() {
+              let node = pathArr.path[i];
+              let string = node.pos.x + " " + node.pos.y;
+              let element = document.getElementById(string);
+              element.classList.remove("visited");
+              element.classList.add("path");
+              if (i == pathArr.path.length - 1)
+                element.addEventListener("animationend", activate);
+            }, i * 30);
+          })(i);
+        }
       }
+      function activate(e) {
+        e.target.removeEventListener("animationend", activate);
+        vm.animating = false;
       }
-      
     },
 
     generate() {
-      this.animating = true;
       let tdArr = document.getElementsByTagName("td");
-      tdArr.forEach(td => {
-        td.classList.remove("startCell","endCell","wall","visited","path");
-      })
-      this.cellsArr.forEach(column => {
-        column.forEach(row => {
+      tdArr.forEach((td) => {
+        td.classList.remove("startCell", "endCell", "wall", "visited", "path");
+      });
+      this.cellsArr.forEach((column) => {
+        column.forEach((row) => {
           row.isWall = false;
         });
       });
@@ -222,12 +235,13 @@ export default {
         this.height - 2
       );
       this.show();
-      
     },
 
     show() {
       let maze = this.arrayMaze;
-      
+      let vm = this;
+      console.log(vm);
+      vm.animating = true;
       for (let i = 0; i < maze.length; i++) {
         (function() {
           setTimeout(function() {
@@ -239,10 +253,14 @@ export default {
             } else {
               element.classList.remove("wall");
             }
-            if(i == maze.length-1)
-            this.animating = false;
-          }, i * 10);
+            if (i == maze.length - 1)
+              element.addEventListener("animationend", activate);
+          }, i * 5);
         })(i);
+      }
+      function activate(e) {
+        e.target.removeEventListener("animationend", activate);
+        vm.animating = false;
       }
     },
 
@@ -374,16 +392,14 @@ export default {
     },
     paintStartEndCell(id) {
       if (this.dropCell) {
-        let pointsArr = document.getElementsByClassName(id+"Cell");
-        if(pointsArr.length > 0)
-        {
-          for(let i = 0; i < pointsArr.length; i++)
-          {
+        let pointsArr = document.getElementsByClassName(id + "Cell");
+        if (pointsArr.length > 0) {
+          for (let i = 0; i < pointsArr.length; i++) {
             let elem = pointsArr[i];
-            elem.classList.remove(id+"Cell");
+            elem.classList.remove(id + "Cell");
           }
         }
-        this.dropCell.classList.add(id+"Cell");
+        this.dropCell.classList.add(id + "Cell");
         document.getElementById(id).removeAttribute("style");
         let y = this.dropCell.attributes[1].value;
         let x = this.dropCell.attributes[2].value;
@@ -408,16 +424,24 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
   display: flex;
   align-content: center;
   flex-direction: column;
+  background-color: #2c3e50;
+  height: 100%;
+}
+
+html,
+body,
+p {
+  margin: 0;
+  padding: 0;
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 table {
@@ -428,7 +452,7 @@ table {
 table td {
   height: 30px;
   width: 30px;
-  border: 1px solid black;
+  border: 1px solid #4e6f90;
   position: relative;
 }
 
@@ -442,13 +466,98 @@ table td::before {
 }
 
 .sliders {
-  width: 30%;
   display: flex;
+  width: 50%;
+  justify-content: center;
+  align-items: center;
 }
 
-.slidecontainer {
+.range-slider {
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.range-slider__range {
+  -webkit-appearance: none;
+  width: 80%;
+  height: 10px;
+  border-radius: 5px;
+  background: #d7dcdf;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+.range-slider__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2c3e50;
+  cursor: pointer;
+  -webkit-transition: background 0.15s ease-in-out;
+  transition: background 0.15s ease-in-out;
+}
+.range-slider__range::-webkit-slider-thumb:hover {
+  background: #1abc9c;
+}
+.range-slider__range:active::-webkit-slider-thumb {
+  background: #1abc9c;
+}
+.range-slider__range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: #2c3e50;
+  cursor: pointer;
+  -moz-transition: background 0.15s ease-in-out;
+  transition: background 0.15s ease-in-out;
+}
+.range-slider__range::-moz-range-thumb:hover {
+  background: #1abc9c;
+}
+.range-slider__range:active::-moz-range-thumb {
+  background: #1abc9c;
+}
+.range-slider__range:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px #1abc9c;
+}
+
+.range-slider__value {
+  display: inline-block;
+  position: relative;
+  width: 10%;
+  color: #fff;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 3px;
+  background: #2c3e50;
+  padding: 5px 10px;
+  margin-left: 8px;
+}
+.range-slider__value:after {
+  position: absolute;
+  top: 16px;
+  left: -7px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-right: 7px solid #2c3e50;
+  border-bottom: 7px solid transparent;
+  content: "";
+}
+
+::-moz-range-track {
+  background: #d7dcdf;
+  border: 0;
+}
+
+input::-moz-focus-inner,
+input::-moz-focus-outer {
+  border: 0;
 }
 
 .buttons {
@@ -459,34 +568,18 @@ table td:hover {
   background-color: #d0d0d0;
 }
 
-.startCell, .startCell::before{
+.startCell,
+.startCell::before {
   background-image: url("../images/placeholder.svg");
-  background-size:contain;
-  background-repeat:no-repeat;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
-.endCell, .endCell::before {
+.endCell,
+.endCell::before {
   background-image: url("../images/arrival.svg");
-  background-size:contain;
-  background-repeat:no-repeat;
-}
-
-.slidecontainer {
-  width: 100%;
-}
-
-.slider {
-  -webkit-appearance: none;
-  height: 25px;
-  background: #d3d3d3;
-  outline: none;
-  opacity: 0.7;
-  -webkit-transition: 0.2s;
-  transition: opacity 0.2s;
-}
-
-.slider:hover {
-  opacity: 1;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
 .actionsbar {
@@ -496,18 +589,28 @@ table td:hover {
 }
 
 .draggableCells {
+  color: white;
   display: flex;
+  flex-direction: column;
+  align-self: center;
 }
 
-.draggableCells > div {
+.content {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.content > div > div {
   width: 32px;
   height: 32px;
   margin-left: 5px;
-  border: 1px solid black;
+
+  border-radius: 50%;
   position: relative;
 }
 
-.draggableCells > div span {
+.content > div span {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -515,81 +618,100 @@ table td:hover {
   left: 0;
 }
 
-.draggableCells > div #start {
+.content > div #start {
   background-image: url("../images/placeholder.svg");
-  background-size:contain;
-  background-repeat:no-repeat;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
-.draggableCells > div #end {
+.content > div #end {
   background-image: url("../images/arrival.svg");
-  background-size:contain;
-  background-repeat:no-repeat;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
-.draggableCells > div:hover {
+.content > div:hover {
   cursor: pointer;
 }
 
-.draggableCells .start:hover {
-  background-color: lightgreen;   
+.content .start:hover {
+  background-color: darkgreen;
 }
 
-.draggableCells .end:hover {
-  background-color: lightcoral;
+.content .end:hover {
+  background-color: darkred;
 }
 
-.draggableCells .start {
+.content .start {
   background-image: url("../images/placeholder.svg");
-  background-size:contain;
-  background-repeat:no-repeat;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid lightgreen;
 }
 
-.draggableCells .end {
+.content .end {
   background-image: url("../images/arrival.svg");
-  background-size:contain;
-  background-repeat:no-repeat;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid lightcoral;
+}
+p {
+  margin: 5px;
 }
 
-.path{
-  position:relative;
+button {
+  background-color: #2c3e50;
+  padding: 15px;
+  border-radius: 1000px;
+  border: none;
+  color: white;
+  margin-left: 5px;
+  margin-right: 5px;
+  -moz-transition: background-color 0.15s ease-in-out;
+  transition: background-color 0.15s ease-in-out;
 }
 
-.path::before{
-  position:absolute;
-  top:0;
-  left:0;
-  height:100%;
-  width:100%;
+button:hover {
+  background-color: #1abc9c;
+  cursor: pointer;
+}
+
+.actionsbar {
+  border-bottom-left-radius: 25%;
+  border-bottom-right-radius: 25%;
+  background-color: #4e6f90;
+  margin-bottom: 50px;
+  padding: 25px;
+  height: 50px;
+}
+
+.path {
+  position: relative;
+}
+
+.path::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
   background-color: #ff7ac3;
   animation-name: paint-path;
-  animation-duration:1.5s;
-}
-
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 25px;
-  height: 25px;
-  background: #4caf50;
-  cursor: pointer;
-}
-
-.slider::-moz-range-thumb {
-  width: 25px;
-  height: 25px;
-  background: #4caf50;
-  cursor: pointer;
+  animation-duration: 1.5s;
 }
 
 .wall::before {
-  background-color: #2c3e50;
+  background-color: #4e6f90;
   animation-name: paint-wall;
-  animation-duration: 0.5s;
+  animation-duration: 0.3s;
 }
 
-.wall:hover::before{
-  background-color:#4e6f90;
+.wall:hover::before {
+  background-color: #4e6f90;
 }
 
 .visited::before {
@@ -598,19 +720,23 @@ table td:hover {
   animation-duration: 1s;
 }
 
+.disabled > * {
+  pointer-events: none;
+}
+
 @keyframes paint-wall {
   0% {
     background-color: #fff;
   }
   25% {
     background-color: #2c3e50;
-    transform: scale(0.5);
+    transform: scale(1);
   }
   50% {
-    transform: scale(0.75);
+    transform: scale(1.25);
   }
   75% {
-    transform: scale(1);
+    transform: scale(1.5);
   }
   90% {
     transform: scale(1.25);
@@ -644,13 +770,11 @@ table td:hover {
     background-color: #d1fe84;
     transform: scale(1);
   }
-
-
 }
 
 @keyframes paint-path {
   0% {
-    background-color:  #ff7ac3;
+    background-color: #ff7ac3;
   }
   25% {
     transform: scale(0.5);
